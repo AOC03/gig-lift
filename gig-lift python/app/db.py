@@ -6,7 +6,10 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///carpool.db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:////home/AOC03/gig-lift/gig-lift python/carpool.db"
+)
 
 engine_kwargs = {"pool_pre_ping": True}
 if DATABASE_URL.startswith("sqlite"):
@@ -27,4 +30,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
