@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Reports</h2>
+
+{% if reports %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Ride</th>
+        <th>Reporter</th>
+        <th>Reported</th>
+        <th>Reason</th>
+        <th>Details</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reports %}
+        {% set reporter = user_map.get(r.reporter_id) %}
+        {% set reported = user_map.get(r.reported_user_id) %}
+        {% set ride = ride_map.get(r.ride_id) %}
+
+        <tr>
+          <td class="muted small">{% if r.created_at %}{{ r.created_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}</td>
+
+          <td>
+            {% if ride %}
+              <a class="btn btn-link" href="{{ url_for('ride_detail', ride_id=ride.id) }}">Ride #{{ ride.id }}</a>
+            {% else %}
+              <span class="muted">Unknown</span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if reporter %}
+              {{ reporter.name }} ({{ reporter.email }})
+            {% else %}
+              <span class="muted">Unknown</span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if reported %}
+              {{ reported.name }} ({{ reported.email }})
+            {% else %}
+              <span class="muted">Unknown</span>
+            {% endif %}
+          </td>
+
+          <td>{{ r.reason }}</td>
+          <td>{{ r.comment }}</td>
+
+          <td>
+            {% if reported %}
+              <form method="post" action="{{ url_for('admin_delete_user', user_id=reported.id) }}"
+                    onsubmit="return confirm('Delete {{ reported.name }}? This removes them and their data from the database.');">
+                <button class="btn btn-danger" type="submit">Delete user</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">No reports yet.</p>
+{% endif %}
+
+<p style="margin-top:12px;">
+  <a class="btn btn-secondary" href="{{ url_for('admin_home') }}">Back</a>
+</p>
+{% endblock %}

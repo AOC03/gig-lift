@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- I used chatgpt to help create the rate and report page. I copied over web.py and prompted it with "how would i be able to create the ride review page that connects with the route for ratings and reviews-->
+<h2>Rate / Report</h2>
+
+<div class="card">
+  <p><strong>Ride:</strong> {{ ride.origin }} → {{ ride.destination }}</p>
+  <p><strong>Departure:</strong> {{ ride.depart_at.strftime("%Y-%m-%d %H:%M") }}</p>
+  <p><strong>Artist:</strong> {{ ride.artist }}</p>
+  <p><strong>Driver:</strong>
+    <a href="{{ url_for('profile_public', user_id=ride.driver.id) }}">{{ ride.driver.name }}</a>
+  </p>
+</div>
+
+<p class="muted">Rate the driver and/or passengers you shared this ride with. You can also report someone here.</p>
+
+{% for p in participants %}
+  {% if current_user and p.id != current_user.id %}
+    {% set existing = existing_map.get(p.id) if existing_map else None %}
+
+    <div class="card" style="margin-top:12px;">
+      <h3 style="margin-top:0;">
+        <a href="{{ url_for('profile_public', user_id=p.id) }}">{{ p.name }}</a>
+      </h3>
+      <p class="muted" style="margin-top:-6px;">{{ p.email }}</p>
+      <div style="display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); align-items:start;">
+        <form method="post" action="{{ url_for('rate_user', ride_id=ride.id, user_id=p.id) }}">
+          <h4>Rate</h4>
+          <label class="small">Stars (1–5)</label>
+          <select name="stars" required>
+            {% for s in [1,2,3,4,5] %}
+              <option value="{{ s }}"
+                {% if existing and existing.stars == s %}selected{% endif %}>
+                {{ s }}
+              </option>
+            {% endfor %}
+          </select>
+          <label class="small" style="margin-top:8px; display:block;">Comment</label>
+          <textarea name="comment" rows="3" placeholder="Optional comment...">{% if existing %}{{ existing.comment }}{% endif %}</textarea>
+          <button class="btn" type="submit" style="margin-top:8px;">
+            {% if existing %}Update rating{% else %}Save rating{% endif %}
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('report_user', ride_id=ride.id, user_id=p.id) }}">
+          <h4>Report</h4>
+          <label class="small">Reason</label>
+          <input type="text" name="reason" maxlength="200" placeholder="e.g. No-show, unsafe behavior" required>
+          <label class="small" style="margin-top:8px; display:block;">Details</label>
+          <textarea name="comment" rows="3" placeholder="Add details (optional)"></textarea>
+          <button class="btn btn-danger" type="submit" style="margin-top:8px;"
+                  onclick="return confirm('Report {{ p.name }}?');">
+            Submit report
+          </button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
+<p style="margin-top:16px;">
+  <a class="btn btn-secondary" href="{{ url_for('ride_detail', ride_id=ride.id) }}">Back to ride</a>
+  <a class="btn btn-secondary" href="{{ url_for('profile') }}">Back to profile</a>
+</p>
+{% endblock %}

@@ -1,0 +1,115 @@
+<!-- Used ChatGPT to create rides_list.html by prompting it with "create a page of all the drivers that have posted their rides" -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Available rides</h2>
+<form method="get" class="filters" style="display:grid; gap:8px; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); align-items:end; margin:12px 0 16px;">
+  <div>
+    <label class="small">Artist</label>
+    <input type="text" name="artist" list="artist_suggestions" value="{{ sel.artist or '' }}" placeholder="Start typing…">
+    {% if artists %}
+      <datalist id="artist_suggestions">
+        {% for a in artists %}<option value="{{ a }}"></option>{% endfor %}
+      </datalist>
+    {% endif %}
+  </div>
+  <div>
+    <label class="small">County</label>
+    <select name="county">
+      <option value="">Any</option>
+      {% for c in counties %}
+        <option value="{{ c }}" {% if sel.county == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="small">From date</label>
+    <input type="date" name="from" value="{{ sel.date_from or '' }}">
+  </div>
+  <div>
+    <label class="small">To date</label>
+    <input type="date" name="to" value="{{ sel.date_to or '' }}">
+  </div>
+  <div style="grid-column: 1 / -1;">
+    <span class="small" style="display:block;margin-bottom:4px;">Tags</span>
+    {% for t in ['girls only','boys only','lgbt friendly','quiet ride','party vibes'] %}
+      <label style="margin-right:12px;">
+        <input type="checkbox" name="tags" value="{{ t }}" {% if t in sel.tags %}checked{% endif %}> {{ t|title }}
+      </label>
+    {% endfor %}
+  </div>
+  <label style="display:flex;align-items:center; gap:8px;">
+    <input type="checkbox" name="available" value="1" {% if sel.available %}checked{% endif %}> Seats available only
+  </label>
+  <div style="justify-self:start;">
+    <button class="btn" type="submit">Apply</button>
+    <a class="btn btn-secondary" href="{{ url_for('home') }}">Reset</a>
+  </div>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Driver</th><th>From</th><th>To</th><th>Departure</th><th>Seats</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rides %}
+      {% set seats_left = r.seats_total - (r.bookings|length) %}
+      {% set is_finished = finished_ids and (r.id in finished_ids) %}
+      <tr>
+        <td>
+          <a href="{{ url_for('profile_public', user_id=r.driver.id) }}">{{ r.driver.name }}</a>
+          {% if is_finished %}
+            <div class="small muted">Finished</div>
+          {% endif %}
+        </td>
+        <td>{{ r.origin }}</td>
+        <td>
+          {{ r.destination }}
+          <div class="small muted">Artist: {{ r.artist }}</div>
+          {% if r.tags %}
+            <div class="tags-line">
+              {% for t in r.tags %}<span class="badge">{{ t }}</span>{% endfor %}
+            </div>
+          {% endif %}
+        </td>
+        <td>{{ r.depart_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ seats_left }} / {{ r.seats_total }}</td>
+        <td>
+          {% if current_user %}
+            {% if r.driver_id == current_user.id %}
+              <a class="btn btn-secondary" href="{{ url_for('ride_detail', ride_id=r.id) }}">Manage</a>
+              <span class="muted small" style="margin-left:8px;">Your ride</span>
+            {% else %}
+              {% if r.id in joined_ids %}
+                {% if is_finished %}
+                  <a class="btn btn-secondary" href="{{ url_for('review_ride', ride_id=r.id) }}">Rate / Report</a>
+                {% else %}
+                  <form method="post" action="{{ url_for('cancel_join', ride_id=r.id) }}" style="display:inline;">
+                    <button class="btn btn-secondary" type="submit">Cancel</button>
+                  </form>
+                {% endif %}
+              {% elif is_finished %}
+                <span class="muted small">Finished</span>
+              {% elif seats_left > 0 %}
+                <form method="post" action="{{ url_for('join_ride', ride_id=r.id) }}" style="display:inline;">
+                  <button class="btn" type="submit">Join</button>
+                </form>
+              {% else %}
+                <span class="muted small">Full</span>
+              {% endif %}
+              <a class="btn btn-link" href="{{ url_for('ride_detail', ride_id=r.id) }}">Details</a>
+            {% endif %}
+          {% else %}
+            <a class="btn btn-secondary" href="{{ url_for('login') }}">Log in to join</a>
+            <a class="btn btn-link" href="{{ url_for('ride_detail', ride_id=r.id) }}">Details</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">No rides yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

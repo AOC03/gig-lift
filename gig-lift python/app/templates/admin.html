@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin</h2>
+
+<div class="card">
+  <p><strong>Total users:</strong> {{ user_count }}</p>
+  <p><strong>Total reports:</strong> {{ report_count }}</p>
+  <p><strong>Total rides:</strong> {{ total_rides }}</p>
+  <p><strong>Total finished rides:</strong> {{ total_finished_rides }}</p>
+  <p><strong>Total bookings:</strong> {{ total_bookings }}</p>
+</div>
+
+<p style="margin-top:12px;">
+  <a class="btn" href="{{ url_for('admin_reports') }}">Review reports</a>
+</p>
+{% endblock %}

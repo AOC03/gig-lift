@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>User profile</h2>
+
+<div class="card">
+  <p><strong>Name:</strong> {{ u.name }}</p>
+
+  {% if avg_rating is not none %}
+    <p><strong>Average rating:</strong> {{ "%.1f"|format(avg_rating) }} / 5</p>
+  {% else %}
+    <p class="muted">No ratings yet.</p>
+  {% endif %}
+</div>
+
+<h3 style="margin-top:16px;">Ratings & comments</h3>
+
+{% if ratings %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Stars</th>
+        <th>Comment</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in ratings %}
+        <tr>
+          <td>{{ r.stars }} / 5</td>
+          <td>{{ r.comment }}</td>
+          <td class="muted small">
+            {% if r.created_at %}{{ r.created_at.strftime("%Y-%m-%d") }}{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">No ratings yet.</p>
+{% endif %}
+
+<p style="margin-top:16px;">
+  <a class="btn btn-secondary" href="{{ url_for('home') }}">Back</a>
+</p>
+{% endblock %}

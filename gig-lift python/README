@@ -1,0 +1,18 @@
+<!-- used chatgpt to create base.html, i prompted it with "create me a simple homepage for a carpooling website" --> for a
+<!--Used ChatGPT to ride_detail.html, I input ride_new and rise_list and prompted it "Using these, create a details page for this carpooling app"
+<!-- Used ChatGPT to create rides_list.html by prompting it with "create a page of all the drivers that have posted their rides"
+# Used ChatGPT to set up create db.py, i prompted it "create the code to set up an SQLAlchemy database connection for a carpooling app"
+#This Kicking Users code is from chatgpt, I uploaded web.py, base.html and ride_detail.html and asked "how i would be able to add a kick users button"
+/* Used ChatGpt to create styles.css, i input all the html and prompted "give me a simple css for these html's"*/
+# I used ChatGPT to help read the xlsx file for the venues and artists. I prompted it with "how would i be able to connect an xlsx file to python'
+# I used ChatGPT to help create the filters for the homepage. I copied over the web.py and ride_detail.html and prompted it with "how would i be able to create filters for this code"
+# Using Chatgpt I copied over profile_html and web.py and prompted it with "how would i be able to implement a password change feature'
+!-- Used ChatGPT to create rides_list.html by prompting it with "create a page of all the drivers that have posted their rides" -->
+<!-- I used chatgpt to help create the rate and report page. I copied over web.py and prompted it with "how would i be able to create the ride review page that connects with the route for ratings and reviews-->
+# I used ChatGPT to help hide the rides from the home page. I copied over web.py and prompted it with "how can i make so the rides disapear from the homepage after they are finished
+# I used ChatGPT help add the past rides to the profile pages. I copied over web.py and prompted it with "How would i be able to move the finished rides to the profile pages"
+# I used ChatGPT to help fix a problem with creating a new password. I copied over web.py and profile.html and prompted it with "the new password doesnt enter the database when changed"
+<!--  This Code to create the map is chatgpt along with the map code in models.py, web.py, ride_new.html. I uploaded those files and prompted chatgpt with 'how would i be able to create an interactive map using these files' -->
+# With the help of ChatGPT I made it so users can't join blocked rides. I copied web.py over and prompted it with 'how would i be able to make it so users cant join blocked users rides'
+# With the help of ChatGPT I made it users can't see messages from blocked users. I prompted chatgpt with 'how would i be able to block user messages from blocked users
+# All the database code from iteration 5 is used with chatgpt, as i planned to move it to an external server which would require me to change it all, i wouldve hardcoded this but didnt have enough time in this iteration so i have pushed it to the 6th and final iteration

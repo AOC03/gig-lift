@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Ride details</h2>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<div class="card">
+  <p>
+    <strong>Driver:</strong>
+    <a href="{{ url_for('profile_public', user_id=ride.driver.id) }}">{{ ride.driver.name }}</a>
+    ({{ ride.driver.email }})
+
+    {% if current_user and current_user.id != ride.driver.id %}
+      <span style="margin-left: 8px;">
+        {% if ride.driver.id in my_blocked_ids %}
+          <form method="post" action="{{ url_for('unblock_user', user_id=ride.driver.id) }}" style="display:inline;">
+            <button class="btn btn-secondary" type="submit">Unblock</button>
+          </form>
+        {% else %}
+          <form method="post" action="{{ url_for('block_user', user_id=ride.driver.id) }}"
+                onsubmit="return confirm('Block {{ ride.driver.name }}?');"
+                style="display:inline;">
+            <button class="btn btn-danger" type="submit">Block</button>
+          </form>
+        {% endif %}
+      </span>
+    {% endif %}
+  </p>
+
+  <p><strong>From:</strong> {{ ride.origin }} &nbsp; <strong>To:</strong> {{ ride.destination }}</p>
+  <p><strong>Departure:</strong> {{ ride.depart_at.strftime("%Y-%m-%d %H:%M") }}</p>
+  {% set seats_left = ride.seats_total - (ride.bookings|length) %}
+  <p><strong>Seats:</strong> {{ seats_left }} / {{ ride.seats_total }}</p>
+  <p><strong>Artist:</strong> {{ ride.artist }}</p>
+
+  {% if ride.tags %}
+    <p>
+      <strong>Tags:</strong>
+      {% for t in ride.tags %}<span class="badge">{{ t }}</span>{% endfor %}
+    </p>
+  {% endif %}
+
+  {% if is_finished %}
+    <p class="muted"><strong>Status:</strong> Finished</p>
+  {% endif %}
+</div>
+
+{% if is_driver and not is_finished %}
+  <form method="post" action="{{ url_for('finish_ride', ride_id=ride.id) }}"
+        onsubmit="return confirm('Finish this ride? This will move it to Past Rides and stop new passengers from joining.');">
+    <button class="btn" type="submit">Finish ride</button>
+  </form>
+{% elif is_finished %}
+  {% if current_user %}
+    <p>
+      <a class="btn btn-secondary" href="{{ url_for('review_ride', ride_id=ride.id) }}">Rate / Report</a>
+    </p>
+  {% endif %}
+{% endif %}
+
+{% if ride.origin_lat and ride.origin_lng %}
+  <h3>Pickup location</h3>
+  <div id="detail_map" style="height: 320px; border-radius: 12px;"></div>
+
+  <script>
+    const dmap = L.map('detail_map').setView([{{ ride.origin_lat }}, {{ ride.origin_lng }}], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(dmap);
+
+    L.marker([{{ ride.origin_lat }}, {{ ride.origin_lng }}]).addTo(dmap);
+  </script>
+{% else %}
+  <p class="muted small">No pickup location provided.</p>
+{% endif %}
+
+<h3>Passengers</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+
+      {% if is_driver and not is_finished %}
+        <th></th>
+      {% endif %}
+
+      {% if current_user %}
+        <th></th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% if ride.bookings %}
+      {% for b in ride.bookings %}
+        <tr>
+          <td><a href="{{ url_for('profile_public', user_id=b.rider.id) }}">{{ b.rider.name }}</a></td>
+          <td>{{ b.rider.email }}</td>
+
+          {% if is_driver and not is_finished %}
+          <td>
+            <form method="post" action="{{ url_for('kick_passenger', ride_id=ride.id, booking_id=b.id) }}"
+                  onsubmit="return confirm('Remove {{ b.rider.name }} from this ride?');">
+              <button class="btn btn-danger" type="submit">Kick</button>
+            </form>
+          </td>
+          {% endif %}
+
+          {% if current_user %}
+            <td>
+              {% if current_user.id == b.rider.id %}
+                <span class="muted small">You</span>
+              {% else %}
+                {% if b.rider.id in my_blocked_ids %}
+                  <form method="post" action="{{ url_for('unblock_user', user_id=b.rider.id) }}" style="display:inline;">
+                    <button class="btn btn-secondary" type="submit">Unblock</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{{ url_for('block_user', user_id=b.rider.id) }}"
+                        onsubmit="return confirm('Block {{ b.rider.name }}?');"
+                        style="display:inline;">
+                    <button class="btn btn-danger" type="submit">Block</button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    {% else %}
+      {% set extra_cols = 0 %}
+      {% if is_driver and not is_finished %}{% set extra_cols = extra_cols + 1 %}{% endif %}
+      {% if current_user %}{% set extra_cols = extra_cols + 1 %}{% endif %}
+      <tr>
+        <td colspan="{{ 2 + extra_cols }}" class="muted">No passengers yet.</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+
+{# -------------------- RIDE CHAT -------------------- #}
+{% if current_user and is_participant %}
+  <h3>Ride chat</h3>
+
+  <div class="card" style="max-height: 320px; overflow:auto;">
+    {% if messages %}
+      {% for m in messages %}
+        <div style="margin-bottom: 10px;">
+          <div class="small muted">
+            <strong>{{ m.sender.name }}</strong>
+            · {{ m.created_at.strftime("%Y-%m-%d %H:%M") }}
+          </div>
+          <div>{{ m.body }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="muted">No messages yet.</p>
+    {% endif %}
+  </div>
+
+  {% if is_finished %}
+    <p class="muted small">This ride is finished — chat is read-only.</p>
+  {% else %}
+    <form method="post" action="{{ url_for('post_ride_message', ride_id=ride.id) }}" class="card" style="margin-top: 10px;">
+      <label class="small">Message</label>
+      <textarea name="body" rows="2" maxlength="1000" placeholder="Say something…" required></textarea>
+      <button class="btn" type="submit" style="margin-top: 8px;">Send</button>
+    </form>
+  {% endif %}
+{% elif current_user and not is_participant %}
+  <p class="muted small">Join this ride to use the ride chat.</p>
+{% endif %}
+
+<p><a class="btn btn-secondary" href="{{ url_for('home') }}">Back</a></p>
+{% endblock %}

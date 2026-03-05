@@ -1,0 +1,39 @@
+<!-- used chatgpt to create base.html, i prompted it with "create me a simple homepage for  carpooling website" -->
+<doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gig Lift</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="container">
+    <h1><a href="{{ url_for('home') }}">Gig Lift</a></h1>
+    <nav>
+      {% if current_user %}
+        <span class="muted">Hi, {{ current_user.name }}</span>
+        <a href="{{ url_for('rides_new') }}" class="btn">Offer a ride</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+        <a href="{{ url_for('profile') }}" class="btn btn-secondary">Profile</a>
+      {% if g.is_admin %}
+        <a href="{{ url_for('admin_home') }}" class="btn btn-secondary">Admin</a>
+      {% endif %}
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn btn-secondary">Sign up</a>
+      {% endif %}
+    </nav>
+  </header>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash container">
+        {% for m in messages %}<div class="flash-item">{{ m }}</div>{% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

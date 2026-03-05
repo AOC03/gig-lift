@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Your profile</h2>
+<form method="post" class="auth-card">
+  <label>Name
+    <input type="text" name="name" value="{{ user.name }}" required>
+  </label>
+  <label>Email
+    <input type="email" name="email" value="{{ user.email }}" required>
+  </label>
+
+  <hr>
+  <p class="muted small">Change password (optional)</p>
+  <label>Current password
+    <input type="password" name="current_password" autocomplete="current-password">
+  </label>
+  <label>New password
+    <input
+      type="password"
+      name="new_password"
+      minlength="8"
+      pattern="^(?=.*[A-Z])(?=.*\d).{8,}$"
+      title="Must be at least 8 characters and include at least 1 capital letter and 1 number."
+      autocomplete="new-password"
+    />
+  </label>
+
+  <label>Confirm new password
+    <input
+      type="password"
+      name="confirm_password"
+      minlength="8"
+      pattern="^(?=.*[A-Z])(?=.*\d).{8,}$"
+      title="Must be at least 8 characters and include at least 1 capital letter and 1 number."
+      autocomplete="new-password"
+    />
+  </label>
+
+  <button class="btn" type="submit">Save changes</button>
+</form>
+
+<hr>
+
+<h3>Past rides</h3>
+{% if past_rides %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Ride</th>
+        <th>Departure</th>
+        <th>Artist</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in past_rides %}
+        <tr>
+          <td>{{ r.origin }} → {{ r.destination }}</td>
+          <td>{{ r.depart_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td>{{ r.artist }}</td>
+          <td>
+            <a class="btn btn-secondary" href="{{ url_for('review_ride', ride_id=r.id) }}">Rate / Report</a>
+            <a class="btn btn-link" href="{{ url_for('ride_detail', ride_id=r.id) }}">Details</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">No past rides yet.</p>
+{% endif %}
+<h3 style="margin-top:16px;">Reviews about you</h3>
+{% if avg_rating is not none %}
+  <p><strong>Average rating:</strong> {{ "%.1f"|format(avg_rating) }} / 5</p>
+{% else %}
+  <p class="muted">No reviews yet.</p>
+{% endif %}
+{% if ratings %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Stars</th>
+        <th>Comment</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in ratings %}
+        <tr>
+          <td>{{ r.stars }} / 5</td>
+          <td>{{ r.comment }}</td>
+          <td class="muted small">
+            {% if r.created_at %}{{ r.created_at.strftime("%Y-%m-%d") }}{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">No reviews yet.</p>
+{% endif %}
+
+{% endblock %}

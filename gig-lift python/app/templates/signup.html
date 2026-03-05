@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Sign up</h2>
+<form method="post" class="auth-card">
+  <label>Name
+    <input type="text" name="name" placeholder="Your name" required>
+  </label>
+  <label>Email
+    <input type="email" name="email" placeholder="you@example.com" required>
+  </label>
+  <label>Password
+    <input
+      type="password"
+      name="password"
+      required
+      minlength="8"
+      pattern="^(?=.*[A-Z])(?=.*\d).{8,}$"
+      title="Must be at least 8 characters and include at least 1 capital letter and 1 number."
+      autocomplete="new-password"
+    />
+  </label>
+  <button class="btn" type="submit">Create account</button>
+  <p class="muted small">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+</form>
+{% endblock %}

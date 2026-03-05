@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Offer a ride</h2>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+<form method="post" class="form">
+  <div class="grid">
+    <label>Driver name
+      <input type="text" name="driver_name" required>
+    </label>
+    <label>Driver email
+      <input type="email" name="driver_email" required>
+    </label>
+  </div>
+
+  <div class="grid">
+    <label>Origin
+  <input type="text" name="origin" required>
+  </label>
+
+  <input type="hidden" name="origin_lat" id="origin_lat">
+  <input type="hidden" name="origin_lng" id="origin_lng">
+
+  <label>Destination
+    <input name="destination" list="venue_suggestions" placeholder="e.g., Marlay Park — Dublin" required>
+  </label>
+
+  <datalist id="venue_suggestions">
+    {% for v in venues %}
+      <option value="{{ v.name }} — {{ v.county }}"></option>
+    {% endfor %}
+  </datalist>
+  </div>
+
+  <div class="grid">
+    <label>Departure time
+      <input type="datetime-local" name="depart_at" required>
+    </label>
+    <label>Seats
+      <input type="number" name="seats_total" min="1" value="3" required>
+    </label>
+    <label>Artist
+      <input type="text" name="artist" list="artist_suggestions" placeholder="e.g., Drake" required>
+    </label>
+
+    <h3>Pick starting location</h3>
+    <p class="muted small">Click on the map to set your pickup point.</p>
+
+    <div style="display:flex; gap:8px; margin:8px 0;">
+      <input id="place_query" class="input" type="text" placeholder="Search place (e.g. 'Dublin City Centre')" style="flex:1;">
+      <button type="button" class="btn btn-secondary" onclick="searchPlace()">Search</button>
+    </div>
+
+    <div id="map" style="height: 320px; border-radius: 12px;"></div>
+
+    <p class="muted small" id="picked_text" style="margin-top:8px;"></p>
+
+
+    <datalist id="artist_suggestions">
+      {% for a in artists %}
+        <option value="{{ a.name }}"></option>
+      {% endfor %}
+    </datalist>
+
+    <fieldset class="tags">
+      <legend>Tags (optional)</legend>
+      <label><input type="checkbox" name="tags" value="girls only"> Girls only</label>
+      <label><input type="checkbox" name="tags" value="boys only"> Boys only</label>
+      <label><input type="checkbox" name="tags" value="lgbt friendly"> LGBT friendly</label>
+      <label><input type="checkbox" name="tags" value="quiet ride"> Quiet ride</label>
+      <label><input type="checkbox" name="tags" value="party vibes"> Party vibes</label>
+    </fieldset>
+  </div>
+
+  <button class="btn" type="submit">Create ride</button>
+</form>
+
+<script>
+  const defaultLat = 53.3498;
+  const defaultLng = -6.2603;
+
+  const map = L.map('map').setView([defaultLat, defaultLng], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  let marker = null;
+
+  function setPoint(lat, lng, label) {
+    document.getElementById('origin_lat').value = lat;
+    document.getElementById('origin_lng').value = lng;
+
+    const txt = label ? `${label} (${lat.toFixed(5)}, ${lng.toFixed(5)})`
+                      : `Picked point: (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+    document.getElementById('picked_text').textContent = txt;
+
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    map.setView([lat, lng], 14);
+  }
+
+  map.on('click', function(e) {
+    setPoint(e.latlng.lat, e.latlng.lng);
+  });
+
+  async function searchPlace() {
+    const q = document.getElementById('place_query').value.trim();
+    if (!q) return;
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+    const data = await res.json();
+    if (!data || !data.length) {
+      alert("No results found.");
+      return;
+    }
+
+    const first = data[0];
+    const lat = parseFloat(first.lat);
+    const lng = parseFloat(first.lon);
+    setPoint(lat, lng, first.display_name);
+  }
+</script>
+
+{% endblock %}
